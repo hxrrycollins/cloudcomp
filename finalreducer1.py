@@ -5,15 +5,13 @@ import re
 from operator import itemgetter
 
 reduced_anas = {}
-unique_anagrams = []
 for line in sys.stdin:
     wordList = re.sub("[^\w]", " ",  line.strip()).split()
-    key = wordList[0]
+    key, value = line.split('\t')
     if key not in reduced_anas:
         reduced_anas[key] = []
-    for i in range(1, len(wordList)):
-        if wordList[i] not in reduced_anas[key]:
-            reduced_anas[key].append(wordList[i])
+    if value not in reduced_anas[key]:
+        reduced_anas[key].append(value)
 for item in reduced_anas:
-    if len(reduced_anas[item])>1:
+    if len(reduced_anas[item])>0:
         print('%s\t%s' % (item, ', '.join(reduced_anas[item])))
