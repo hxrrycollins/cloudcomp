@@ -1,8 +1,7 @@
-#!/usr/bin/env python
 """mapper.py"""
 import re
 import sys
-
+from operator get itemgetter
 anagrams = {}
 
 for line in sys.stdin:
@@ -21,5 +20,3 @@ for line in sys.stdin:
 
 for item in anagrams:
     print('%s\t%s' % (item, ', '.join(anagrams[item])))
-
-    

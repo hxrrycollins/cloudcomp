@@ -8,7 +8,6 @@ unique_anagrams = []
 
 for line in sys.stdin:
     wordList = re.sub("[^\w]", " ",  line.strip()).split()
-    print (wordList)
     key = wordList[0]
     if key not in reduced_anas:
         reduced_anas[key] = []
