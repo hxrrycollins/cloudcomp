@@ -18,4 +18,4 @@ for line in sys.stdin:
             reduced_anas[key].append(wordList[i])
 
 for item in reduced_anas:
-    print('%s - %s' % (item, ', '.join(reduced_anas[item])))
+    print('%s\t%s' % (item, ', '.join(reduced_anas[item])))
