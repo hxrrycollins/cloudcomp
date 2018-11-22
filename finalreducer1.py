@@ -13,5 +13,5 @@ for line in sys.stdin:
     if value not in reduced_anas[key]:
         reduced_anas[key].append(value)
 for item in reduced_anas:
-    if len(reduced_anas[item])>0:
+    if len(reduced_anas[item])>1:
         print('%s\t%s' % (item, ', '.join(reduced_anas[item])))
