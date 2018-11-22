@@ -1,10 +1,11 @@
 """mapper.py"""
 import re
 import sys
-from operator get itemgetter
-anagrams = {}
 
-for line in sys.stdin:
+anagrams = {}
+document = open("norvig.txt", "r")
+
+for line in document:
     line = line.lower().strip()
     words = line.split()
     for word in words:
@@ -18,4 +19,5 @@ for line in sys.stdin:
                 anagrams[holder].append(word)
 
 for item in anagrams:
-    print('%s\t(%s)' % (item, ', '.join(anagrams[item])))
+    if len(anagrams[item][0])>0:
+        print('%s\t%s' % (item, ', '.join(anagrams[item])))

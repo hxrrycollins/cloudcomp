@@ -1,162 +1,3579 @@
-A Retrospective on
-Paradigms of AI Programming
-If you can't hear me, it's because I'm in parentheses. 
-- Steven Wright
-October 1997: It has been six years since I finished Paradigms of AI Programming (or PAIP), and now seems like a good time to look back at how Lisp and AI programming have changed.
-
-Update: April 2002: It has now been over ten years, so I've updated this page.
-
-Is Lisp Still Unique? Or at Least Different?
-In 1991 Lisp offered a combination of features that could not be found in any other language. This combination made Lisp almost a necessity for certain kinds of work (in AI and other applications) and made Lisp the language of choice for a large community of users. Since then Lisp has maintained and added to features, but other languages have caught up. Let's look at whether Lisp is still unique, or at least different from other languages in 2002.
-On [p. 25] of PAIP I list eight important factors that make Lisp a good language for AI applications, and remarked that mostly these allow a programmer to delay making decisions.  Let's look at how Lisp compares to, say, Java and Python in terms of these eight factors:
-
-Built-in Support for Lists. Java has the Vector type, which allows for sequences of dynamically varying length. Lists are better suited for functional programming (but have the disadvantage of linear access time), while Vectors are better suited for Object-Oriented programming (but have the disadvantage of linear time for non-destructive push). Support for Vectors in Java is not nearly as complete as support for lists and sequences in Lisp, mostly because Lisp endorses first-class functions as arguments to functions. Java may soon have a Collection class which cleans up some of the faults with enumerators, vectors and hashtables. Python too has a vector class (which it calls list, and Python's support is similar to Lisp's.
-Automatic Storage Management. Java and Python support this. Lisp implementations tend to be more mature and perform better.
-Dynamic Typing. Java attaches run-time type information to instances of the class Object, but not to primitive data elements. However, Java requires a type declaration for every variable. This has some advantages for production code, but has disadvantages for rapid prototyping and evolution of programs. Java does not have a generic/template system that would allow types life Vector<String>, and suffers greatly because of it. Python's object model is the same as Lisp's, but Python does not allow optional type declarations as Lisp does.
-First-Class Functions. Java has anonymous classes, which serve some of the purposes of closures, although in a less versatile way with a more clumsy syntax. In Lisp, we can say (lambda (x) (f (g x))) where in Java we would have to say
-new UnaryFunction() { 
-  public Object execute(Object x) {
-    return (Cast x).g().f();
-  }
-}
-where Cast is the real type of x. This would only work with classes that observe the UnaryFunction interface (which comes from JGL and is not built-in to Java). Python, as of version 2.1, supports first-class functions almost as well as Lisp: you would write lambda x: f(g(x)). The only drawback is that closed-over variables are read-only.
-Uniform Syntax. Java syntax is of medium complexity; certainly more complex than Lisp. Java does not encourage (or even permit) macros. The JDK compilers are also rather hostile to computer-generated code; things which should be warnings (like unreachable code) are errors. This is somewhat helpful for human-written code, but is just downright annoying for computer-generated code. Some features of the language (like the rules for when you can have a variable of the same name declared) also make it hard to generate code. Python syntax is somewhat simpler than Java, and the presence of eval makes it feasible to generate code at runtime, but the lack of a macro system makes it more tedious than in Lisp.
-Interactive Environment. Some Java environments allow Lisp-like features such as an intgeractive command loop and stop-and-fix debugging. Lisp environments are still ahead, but that probably won't last long. BlueJ in particular has most of the major features of a good Lisp environment: you can recompile a method into a running program, and you can type in an expression and have it evaluated immediately. It is intended for teaching purposes, and I can't tell if it is suitable for production use. Python has the same interactive approach as Lisp, but the environment is less mature than Lisp's.
-Extensibility. This may prove to be Java's weak point. Java works well as long as you are willing to make everything a class. If something new like, say, aspect-oriented programming takes off, Lisp would be able to incorporate it with macros, but Java would not.
-History. Lisp has over 45 years of history; Java has 7, Python 12.
-One more important feature that didn't make this list is efficiency. Lisp is about 1.5 to 4 times faster than Java, and about 10 to 50 times faster than Python. Lisp is probably within 20% to 60% of C/C++ in efficiency on most tasks, which is close enough that the differences depend more on the programmers involved than the language, and close enough that for most applications that speed is not an issue for Lisp. (You will need to code certain things, particularly involving memory management, using the techniques in the book such as memory resources. This is more work for the programmer, but is o different from what C++ offers with STL allocators.) Python is a different story: there is a large class of problems for which Python is too slow. Its hard to get benchmark data that is relevent to your set of applications, but here's some data:
-Relative speeds of 5 languages on 10 benchmarks from The Great Computer Language Shootout. Speeds are normalized so the g++ compiler for C++ is 1.00, so 2.00 means twice as slow; 0.01 means 100 times faster. Background colors are coded according to legend on right. The last line estimates the 25% to 75% quartiles by throwing out the bottom two and top two scores for each language.
-Test	Lisp	Java	Python	Perl	C++
-exception handling	0.01	0.90	1.54	1.73	1.00
-hash access	1.06	3.23	4.01	1.85	1.00
-sum numbers from file	7.54	2.63	8.34	2.49	1.00		100+ x C++
-reverse lines	1.61	1.22	1.38	1.25	1.00		50-100 x C++
-matrix multiplication	3.30	8.90	278.00	226.00	1.00		10-50 x C++
-heapsort	1.67	7.00	84.42	75.67	1.00		5-10 x C++
-array access	1.75	6.83	141.08	127.25	1.00		1-5 x C++
-list processing	0.93	20.47	20.33	11.27	1.00		0-1 x C++
-object instantiation	1.32	2.39	49.11	89.21	1.00
-word count	0.73	4.61	2.57	1.64	1.00
-25% to 75%	0.93 to 1.67	2.63 to 7.00	2.57 to 84.42	1.73 to 89.21	1.00 to 1.00
-Overall, Lisp does very well on the nine features. Anyone making an objective choice based on these features would continue to find Lisp the best choice for a wide range of applications. But there are now viable contenders that did not exist in 1991.
-
-Is Lisp Unpopular Now?
-One criticism of Lisp is that it is not as popular as other languages, and thus has a smaller community of users and less development activity around it.
-The majority of the industry probably feels that Lisp has become less relevant, and that Java is taking over as the language of choice. My perception in 1997 was that Lisp had held on to most of its faithful users and added some new ones, while indeed much of the rest of the world had rushed first to C++, and then to Java (which is catching up fast, but C++ still holds a big lead). Thus, Lisp was in a stable absolute position, but a weaker relative position because of the increased support for the "majority" languages, C++ and Java, and less acceptance of a wide range of languages. The major Lisp vendors, Harlequin (for whom I worked for two years), and Franz, were at that time reporting steady increasing sales. I wasn't so sure about Digitool; they make a fine product, but it is Mac only, and the Mac is rapidly losing market share. Maybe they will come back stronger on the heels of OS X. Lisp was still being promoted, in a low-key way, by publishers and distributers like Amazon. Lisp continues to enjoy pockets of commercial success. Paul Graham recently sold a Lisp program (and the company around it) to Yahoo for $40 million. (It was an authoring tool for online stores.) Orbitz, one of the leading travel e-commerce sites, does schedule optimization using a Lisp system supplied by Carl de Marcken's company, ITA software. The CL-HTTP web server is in wide use. Some of the best work in bioinformatics is done in Lisp. For more examples, see:
-
-The Franz web site
-The Cliki index lists Common Lisp resources, but they are not all portable across CL implementations
-The Linux Weekly News
-The Open Directory entry for Lisp
-The comp.lang.lisp newsgroup
-In 2002, the grand hopes for Java have not panned out. Java enjoys great popularity in the Enterprise space, but has not taken over as a general purpose rapid development language, nor as an efficient systems language. Performance of Java remains dismal when compared to C++ or to Lisp. I'm not sure why that is; Sun certainly has had enough time and resources to implement a better system. Maybe they should have hired more ex-Lisp-compiler-writers.
-
-Fred Brooks is reported to have said ``More users find more bugs.'' I don't think that's a problem for Lisp. Lisp has had enough user-years that it is more stable than the other languages we will discuss here.
-
-But the situation for Lisp in terms of popularity still reveals a weakness: the language standard has stagnated, without addressing some key issues like threading, sockets, and others. Furthermore, there is no well-known standard repository of libraries for new protocols like HTTP, HTML, XML, SOAP, etc. Individual implementations add libraries for these, and individual programmers create open-source implementations, but you don't get them right out of the box like you do with Java or Python, nor can you find them at a single location, like Perl's CPAN. This means that it takes more work to hunt these libraries down, and some programmers dismiss Lisp for a project because they don't immediately find the libraries they need.
-
-C++ finally has the Standard Template Library, which remains much harder to use than Lisp's sequence functions, but is capable of great performance in the hands of wizard STL programmers (and of great headaches in the hands of average programmers). Lisp experts are still as productive as ever, but newer programmers are less likely to pick up Lisp. Consider the following measures of language popularity. In 1997 I looked at 10 languages; in 2002 I narrowed the field to 5:
-
-1997
-Language	Books	Usenet 
-Articles	Recent 
-Articles	URLs	Jobs	Avg. 
-Rank
-C++	479	166,686	13,526	3,329	1,006	1.2
-Java	161	160,276	30,663	2,450	280	1.8
-All Lisps	140	31,501	3,833	1,565	12	4.1
-Perl	67	12,376	9,919	1,031	174	4.6
-Smalltalk	35	36,176	2,187	537	31	5.2
-Lisp	127	15,367	1,775	734	11	6.1
-Prolog	150	7,101	518	846	2	6.6
-Eiffel	10	16,367	2,080	214	0	7.5
-Scheme	10	11,458	1,846	408	0	8.3
-Dylan	3	4,676	212	21	1	9.6
-For 10 computer languages, this chart summarizes the number of books offered at Amazon, the number of archived and recent news articles in comp.lang.* at Dejanews, the number of hits on the query "+Language +computer" at Infoseek, and the number of jobs offered at Westech. (The "+computer" is used because many of the language names are ambiguous (Eiffel Tower, Java drink). "All Lisps" means Lisp+Scheme+Dylan.)
-Lisp is clearly behind C++ and Java, but at least in the ballpark for all measures except jobs. Lisp is slightly ahead of Perl, beating it in 3 of 5 measures.
-
-2002
-Language	Books	Usenet
-Articles	URLs	Jobs	Avg.
-Rank
-Java	1695	68,000	1,790,000	1109	1.75
-C++	1208	25,800	1,170,800	517	2.00
-Perl	424	57,800	978,000	364	2.50
-Python	132	6,810	354,000	33	4.00
-Lisp	159	6,330	305,000	4	4.75
-For 5 computer languages, this chart summarizes the number of books offered at Amazon, the number of news articles in comp.lang.* at Google Groups, the number of hits on the query "Language computer" at Google, and the number of jobs offered at Monster.com. (Congratulations to Amazon for being the only one to remain the definitive category-leader for five years.)
-Java has now moved ahead of C++ in popularity, Perl has moved up to where it is nearly competitive with the big two, and Lisp has moved down, now beaing an order of magnitude behind the others in most categories. Python edges out Lisp in 3 of 4 categories.
-
-These measurements are pretty unscientific and may not mean much. After I did them, I became aware of another study done by Tiobe Software, that has Java number 1, C and C++ at 2, 3, and Lisp at 17, with a market share 1/30th of Java. Popular does not mean better, and these numbers may not correlate perfectly with popularity, but they do say something.
-
-Is Lisp at Least Popular for AI?
-In 1991 and 1997, the answer was clearly yes. But in 2002, the answer is less clear. Consider the number of results for the following Google searches:
-Search	Number of Results	Search	Number of Results
-Java AI	401,000	java "artificial intelligence"	136,000
-C++ AI	232,000	C++ "artificial intelligence"	104,000
-Lisp AI	136,000	lisp "artificial intelligence"	81,000
-Perl AI	193,000	Perl "artificial intelligence"	54,000
-Python AI	84,000	Python "artificial intelligence"	40,000
-It has been obvious to most observers that the machine learning community in particular has moved away from Lisp towards C++ or to specialized mathematical packages like Matlab. But I'm actually surprised that the trend has gone this far, and I'm very surprised to see Java on top, because I just haven't seen that much top-notch Java AI code. I'm also amazed that "Perl AI" surpasses "Lisp AI", but I suspect that there's some other meaning of "AI" in the Perl world, because "Perl Artificial Intelligence" is well behind "Lisp Artificial Intelligence".
-
-New Lisp Books
-The best, in my opinion, are Paul Graham's On Lisp and ANSI Common Lisp. Probably the best book ever on how to write Lisp compilers and interpreters is Christian Queinnec's Lisp in Small Pieces. In the Scheme world, Abelson and Sussman have a new edition of Structure and Interpretation of Computer Programs, and Daniel Friedman has a new version of The Little Lisper called The Seasoned Schemer. Stephen Slade has a new book which I have not had a chance to read yet.
-What Lessons are in PAIP?
-Here is my list of the 52 most important lessons in PAIP:
-Use anonymous functions. [p. 20]
-Create new functions (closures) at run time. [p. 22]
-Use the most natural notation available to solve a problem. [p. 42]
-Use the same data for several programs. [p. 43]
-Be specific. Use abstractions. Be concise. Use the provided tools. Don't be obscure. Be consistent. [p. 49]
-Use macros (if really necessary). [p. 66]
-There are 20 or 30 major data types; familiarize yourself with them. [p. 81]
-Whenever you develop a complex data structure, develop a corresponding consistency checker. [p. 90]
-To solve a problem, describe it, specify it in algorithmic terms, implement it, test it, debug and analyze it. Expect this to be an iterative process. [p. 110]
-AI programming is largely exploratory programming; the aim is often to discover more about the problem area. [p. 119]
-A general problem solver should be able to solve different problems. [p. 132]
-We must resist the temptation to belive that all thinking follows the computational model. [p. 147]
-The main object of this book is to cause the reader to say to him or herself "I could have written that". [p. 152]
-If we left out the prompt, we could write a complete Lisp interpreter using just four symbols. Consider what we would have to do to write a Lisp (or Pascal, or Java) interpreter in Pascal (or Java). [p. 176]
-Design patterns can be used informally, or can be abstracted into a formal function, macro, or data type (often involving higher-order functions). [p. 177]
-Use data-driven programming, where pattern/action pairs are stored in a table. [p. 182]
-Sometimes "more is less": its easier to produce more output than just the right output. [p. 231]
-Lisp is not inherently less efficient than other high-level languages - Richard Fateman. [p. 265]
-First develop a working program. Second, instrument it. Third, replace the slow parts. [p. 265]
-The expert Lisp programmer eventually develops a good "efficiency model". [p. 268]
-There are four general techniques for speeding up an algorithm: caching, compiling, delaying computation, and indexing. [p. 269]
-We can write a compiler as a set of macros. [p. 277]
-Compilation and memoization can yield 100-fold speed-ups. [p. 307]
-Low-level efficiency concerns can yield 40-fold speed-ups. [p. 315]
-For efficiency, use declarations, avoid generic functions, avoid complex argument lists, avoid unnecessary consing, use the right data structure. [p. 316]
-A language that doesn't affect the way you think about programming is not worth knowing - Alan Perlis. [p. 348]
-Prolog relies on three important ideas: a uniform data base, logic variables, and automatic backtracking. [p. 349]
-Prolog is similar to Lisp on the main points. [p. 381]
-Object orientation = Objects + Classes + Inheritance - Peter Wegner [p. 435]
-Instead of prohibiting global state (as functional programming does), object-oriented programming breaks up the unruly mass of global state and encapsulates it into small, manageable pieces, or objects. [p. 435]
-Depending on your definition, CLOS is or is not object-oriented. It doesn't support encapsulation. [p. 454]
-Prolog may not provide exactly the logic you want [p. 465], nor the efficiency you want [p. 472]. Other representation schemes are possible.
-Rule-based translation is a powerful idea, however sometimes you need more efficiency, and need to give up the simplicity of a rule-based system [p. 509].
-Translating inputs to a canonical form is often a good strategy [p. 510].
-An "Expert System" goes beyond a simple logic programming system: it provides reasoning with uncertainty, explanations, and flexible flow of control [p. 531].
-Certainty factors provide a simple way of dealing with uncertainty, but there is general agreement that probabilities provide a more solid foundation [p. 534].
-The strategy you use to search for a sequence of good moves can be important [p. 615].
-You can compare two different strategies for a task by running repeated trials of the two [p. 626].
-It pays to precycle [p. 633].
-Memoization can turn an inefficient program into an efficient one [p. 662].
-It is often easier to deal with preferences among competing interpretations of inputs, rather than trying to strictly rule one interpretation in or out [p 670].
-Logic programs have a simple way to express grammars [p. 685].
-Handling quantifiers in natural languiage can be tricky [p. 696].
-Handling long-distance dependencies in natural language can be tricky [p. 702].
-Understanding how a Scheme interpreter works can give you a better appreciation of how Lisp works, and thus make you a better programmer [p. 753].
-The truly amazing, wonderful thing about call/cc is the ability to return to a continuation point more than once. [p. 771].
-The first Lisp interpreter was a result of a programmer ignoring his boss's advice. [p. 777].
-Abelson and Sussman (1985) is probably the best introduction to computer science ever written [p. 777].
-The simplest compiler need not be much more complex than an interpreter [p. 784].
-An extraordinary feature of ANSI Common Lisp is the facility for handling errors [p. 837].
-If you can understand how to write and when to use once-only, then you truly understand macros [p. 853].
-A word to the wise: don't get carried away with macros [p. 855].
-What did PAIP Accomplish?
-As an advanced Lisp text, PAIP stands up very well. There are still very few other places to get a thorough treatment of efficiency issues, Lisp design issues, and uses of macros and compilers. (For macros, Paul Graham's books have done an especially excellent job.)
-As an AI programming text, PAIP does well. The only real competing text to emerge recently is Forbus and de Kleer, and they have a more limited (and thus more focused and integrated) approach, concentrating on inference systems. (The Charniak, Riesbeck, and McDermott book is also still worth looking at.) One change over the last six years is that AI programming has begun to look more like "regular" programming, because (a) AI programs, like "regular" programs, are increasingly concerned with large data bases, and (b) "regular" programmers have begun to address things such as searching the internet and recognizing handwriting and speech. An AI programming text today would have to cover data base interfaces, http and other network protocols, threading, graphical interfaces, and other issues.
-As an AI text, PAIP does not fare as well. It never attempted to be a comprehensive AI text, stressing the "Paradigms" or "Classics" of the field rather than the most current programs and theories. Happily, the classics are beginning to look obsolete now (the field would be in sorry shape if that didn't happen eventually). For a more modern approach to AI, forget PAIP and look at Artificial Intelligence: A Modern Approach.
-Peter Norvig
+a	a
+ceeeioprrsttv	retrospective
+no	on
+aadgimprs	paradigms
+fo	of
+ai	ai
+aggimmnoprr	programming
+fi	if
+ouy	you
+acnt	cant
+aehr	hear
+em	me
+ist	its
+abceesu	because
+im	im
+in	in
+aeeehnprsst	parentheses
+	
+eenstv	steven
+ghirtw	wright
+bceoort	october
+	
+it	it
+ahs	has
+been	been
+isx	six
+aersy	years
+ceins	since
+i	i
+defhiins	finished
+aadgimprs	paradigms
+fo	of
+ai	ai
+aggimmnoprr	programming
+or	or
+aipp	paip
+adn	and
+now	now
+eemss	seems
+eikl	like
+a	a
+dgoo	good
+eimt	time
+ot	to
+kloo	look
+abck	back
+at	at
+how	how
+ilps	lisp
+adn	and
+ai	ai
+aggimmnoprr	programming
+aehv	have
+acdeghn	changed
+adeptu	update
+ailpr	april
+	
+it	it
+ahs	has
+now	now
+been	been
+eorv	over
+ent	ten
+aersy	years
+os	so
+eiv	ive
+addeptu	updated
+hist	this
+aegp	page
+is	is
+ilps	lisp
+illst	still
+einquu	unique
+or	or
+at	at
+aelst	least
+deeffinrt	different
+in	in
+	
+ilps	lisp
+deeffor	offered
+a	a
+abciimnnoot	combination
+fo	of
+aeefrstu	features
+ahtt	that
+cdlou	could
+not	not
+be	be
+dfnou	found
+in	in
+any	any
+ehort	other
+aaegglnu	language
+hist	this
+abciimnnoot	combination
+adem	made
+ilps	lisp
+almost	almost
+a	a
+ceeinssty	necessity
+for	for
+aceinrt	certain
+dikns	kinds
+fo	of
+korw	work
+in	in
+ai	ai
+adn	and
+ehort	other
+aaciilnoppst	applications
+adn	and
+adem	made
+ilps	lisp
+eht	the
+aaegglnu	language
+fo	of
+ccehio	choice
+for	for
+a	a
+aeglr	large
+cimmnotuy	community
+fo	of
+erssu	users
+ceins	since
+ehnt	then
+ilps	lisp
+ahs	has
+aadeiimnnt	maintained
+adn	and
+addde	added
+ot	to
+aeefrstu	features
+btu	but
+ehort	other
+aaegglnsu	languages
+aehv	have
+acghtu	caught
+pu	up
+elst	lets
+kloo	look
+at	at
+eehhrtw	whether
+ilps	lisp
+is	is
+illst	still
+einquu	unique
+or	or
+at	at
+aelst	least
+deeffinrt	different
+fmor	from
+ehort	other
+aaegglnsu	languages
+in	in
+	
+no	on
+p	p
+	
+fo	of
+aipp	paip
+i	i
+ilst	list
+eghit	eight
+aimnoprtt	important
+acforst	factors
+ahtt	that
+aekm	make
+ilps	lisp
+a	a
+dgoo	good
+aaegglnu	language
+for	for
+ai	ai
+aaciilnoppst	applications
+adn	and
+adeekmrr	remarked
+ahtt	that
+lmosty	mostly
+eehst	these
+allow	allow
+a	a
+aegmmoprrr	programmer
+ot	to
+adely	delay
+agikmn	making
+cdeiinoss	decisions
+elst	lets
+kloo	look
+at	at
+how	how
+ilps	lisp
+acemoprs	compares
+ot	to
+asy	say
+aajv	java
+adn	and
+hnopty	python
+in	in
+emrst	terms
+fo	of
+eehst	these
+eghit	eight
+acforst	factors
+biilntu	builtin
+opprstu	support
+for	for
+ilsst	lists
+aajv	java
+ahs	has
+eht	the
+ceortv	vector
+epty	type
+chhiw	which
+allosw	allows
+for	for
+ceeenqssu	sequences
+fo	of
+aacdillmnyy	dynamically
+aginrvy	varying
+eghlnt	length
+ilsst	lists
+aer	are
+beertt	better
+deistu	suited
+for	for
+acfilnnotu	functional
+aggimmnoprr	programming
+btu	but
+aehv	have
+eht	the
+aaaddeginstv	disadvantage
+fo	of
+aeilnr	linear
+access	access
+eimt	time
+ehilw	while
+ceorstv	vectors
+aer	are
+beertt	better
+deistu	suited
+for	for
+bcdeeeijnoortt	objectoriented
+aggimmnoprr	programming
+btu	but
+aehv	have
+eht	the
+aaaddeginstv	disadvantage
+fo	of
+aeilnr	linear
+eimt	time
+for	for
+cdeeinnorsttuv	nondestructive
+hpsu	push
+opprstu	support
+for	for
+ceorstv	vectors
+in	in
+aajv	java
+is	is
+not	not
+aelnry	nearly
+as	as
+ceelmopt	complete
+as	as
+opprstu	support
+for	for
+ilsst	lists
+adn	and
+ceeenqssu	sequences
+in	in
+ilps	lisp
+lmosty	mostly
+abceesu	because
+ilps	lisp
+deenorss	endorses
+acfilrssst	firstclass
+cfinnostu	functions
+as	as
+aegmnrstu	arguments
+ot	to
+cfinnostu	functions
+aajv	java
+amy	may
+noos	soon
+aehv	have
+a	a
+cceillnoot	collection
+aclss	class
+chhiw	which
+acelns	cleans
+pu	up
+emos	some
+fo	of
+eht	the
+aflstu	faults
+hitw	with
+aeemnorrstu	enumerators
+ceorstv	vectors
+adn	and
+aabehhlsst	hashtables
+hnopty	python
+oot	too
+ahs	has
+a	a
+ceortv	vector
+aclss	class
+chhiw	which
+it	it
+aclls	calls
+ilst	list
+adn	and
+hnopsty	pythons
+opprstu	support
+is	is
+aiilmrs	similar
+ot	to
+ilpss	lisps
+aacimottu	automatic
+aegorst	storage
+aaeegmmnnt	management
+aajv	java
+adn	and
+hnopty	python
+opprstu	support
+hist	this
+ilps	lisp
+aeeiilmmnnopstt	implementations
+dent	tend
+ot	to
+be	be
+emor	more
+aemrtu	mature
+adn	and
+efmoprr	perform
+beertt	better
+acdimny	dynamic
+ginpty	typing
+aajv	java
+aacehstt	attaches
+eimnrtu	runtime
+epty	type
+afiimnnoort	information
+ot	to
+aceinnsst	instances
+fo	of
+eht	the
+aclss	class
+bcejot	object
+btu	but
+not	not
+ot	to
+eiiimprtv	primitive
+aadt	data
+eeelmnst	elements
+eehorvw	however
+aajv	java
+eeiqrrsu	requires
+a	a
+epty	type
+aacdeilnort	declaration
+for	for
+eervy	every
+aabeilrv	variable
+hist	this
+ahs	has
+emos	some
+aaadegnstv	advantages
+for	for
+cdinooprtu	production
+cdeo	code
+btu	but
+ahs	has
+aaaddeginsstv	disadvantages
+for	for
+adipr	rapid
+ginoopprtty	prototyping
+adn	and
+eilnootuv	evolution
+fo	of
+agmoprrs	programs
+aajv	java
+deos	does
+not	not
+aehv	have
+a	a
+aceeeegilmnprtt	generictemplate
+emssty	system
+ahtt	that
+dlouw	would
+allow	allow
+epsty	types
+efil	life
+ceginorrsttv	vectorstring
+adn	and
+effrssu	suffers
+aeglrty	greatly
+abceesu	because
+fo	of
+it	it
+hnopsty	pythons
+bcejot	object
+delmo	model
+is	is
+eht	the
+aems	same
+as	as
+ilpss	lisps
+btu	but
+hnopty	python
+deos	does
+not	not
+allow	allow
+ailnoopt	optional
+epty	type
+aacdeilnorst	declarations
+as	as
+ilps	lisp
+deos	does
+acfilrssst	firstclass
+cfinnostu	functions
+aajv	java
+ahs	has
+amnnoosuy	anonymous
+acelsss	classes
+chhiw	which
+eersv	serve
+emos	some
+fo	of
+eht	the
+eopprssu	purposes
+fo	of
+celorssu	closures
+aghhlotu	although
+in	in
+a	a
+elss	less
+aeeilrstv	versatile
+awy	way
+hitw	with
+a	a
+emor	more
+clmsuy	clumsy
+anstxy	syntax
+in	in
+ilps	lisp
+ew	we
+acn	can
+asy	say
+aabdlm	lambda
+x	x
+f	f
+g	g
+x	x
+eehrw	where
+in	in
+aajv	java
+ew	we
+dlouw	would
+aehv	have
+ot	to
+asy	say
+enw	new
+acfinnnortuuy	unaryfunction
+	
+bcilpu	public
+bcejot	object
+bcceeeejottux	executeobject
+x	x
+	
+enrrtu	return
+acst	cast
+fgx	xgf
+	
+	
+eehrw	where
+acst	cast
+is	is
+eht	the
+aelr	real
+epty	type
+fo	of
+x	x
+hist	this
+dlouw	would
+lnoy	only
+korw	work
+hitw	with
+acelsss	classes
+ahtt	that
+beeorsv	observe
+eht	the
+acfinnnortuuy	unaryfunction
+aceefinrt	interface
+chhiw	which
+cemos	comes
+fmor	from
+gjl	jgl
+adn	and
+is	is
+not	not
+biilntu	builtin
+ot	to
+aajv	java
+hnopty	python
+as	as
+fo	of
+einorsv	version
+	
+opprsstu	supports
+acfilrssst	firstclass
+cfinnostu	functions
+almost	almost
+as	as
+ellw	well
+as	as
+ilps	lisp
+ouy	you
+dlouw	would
+eirtw	write
+aabdlm	lambda
+x	x
+fgx	fgx
+eht	the
+lnoy	only
+aabcdkrw	drawback
+is	is
+ahtt	that
+cdeeloorsv	closedover
+aabeilrsv	variables
+aer	are
+adelnory	readonly
+fimnoru	uniform
+anstxy	syntax
+aajv	java
+anstxy	syntax
+is	is
+fo	of
+deimmu	medium
+ceilmoptxy	complexity
+aceilnrty	certainly
+emor	more
+celmopx	complex
+ahnt	than
+ilps	lisp
+aajv	java
+deos	does
+not	not
+aceegnoru	encourage
+or	or
+eenv	even
+eimprt	permit
+acmors	macros
+eht	the
+djk	jdk
+ceilmoprs	compilers
+aer	are
+alos	also
+aehrrt	rather
+ehilost	hostile
+ot	to
+acdeeeegmnoprrttu	computergenerated
+cdeo	code
+ghinst	things
+chhiw	which
+dhlosu	should
+be	be
+aginnrsw	warnings
+eikl	like
+aabceehlnru	unreachable
+cdeo	code
+aer	are
+eorrrs	errors
+hist	this
+is	is
+aehmostw	somewhat
+efhllpu	helpful
+for	for
+aehimnnrttuw	humanwritten
+cdeo	code
+btu	but
+is	is
+jstu	just
+dghinortw	downright
+aginnnoy	annoying
+for	for
+acdeeeegmnoprrttu	computergenerated
+cdeo	code
+emos	some
+aeefrstu	features
+fo	of
+eht	the
+aaegglnu	language
+eikl	like
+eht	the
+elrsu	rules
+for	for
+ehnw	when
+ouy	you
+acn	can
+aehv	have
+a	a
+aabeilrv	variable
+fo	of
+eht	the
+aems	same
+aemn	name
+acddeelr	declared
+alos	also
+aekm	make
+it	it
+adhr	hard
+ot	to
+aeeegnrt	generate
+cdeo	code
+hnopty	python
+anstxy	syntax
+is	is
+aehmostw	somewhat
+eilmprs	simpler
+ahnt	than
+aajv	java
+adn	and
+eht	the
+ceeenprs	presence
+fo	of
+aelv	eval
+aekms	makes
+it	it
+abeefils	feasible
+ot	to
+aeeegnrt	generate
+cdeo	code
+at	at
+eimnrtu	runtime
+btu	but
+eht	the
+ackl	lack
+fo	of
+a	a
+acmor	macro
+emssty	system
+aekms	makes
+it	it
+emor	more
+deiostu	tedious
+ahnt	than
+in	in
+ilps	lisp
+aceeiinrttv	interactive
+eeimnnnortv	environment
+emos	some
+aajv	java
+eeimnnnorstv	environments
+allow	allow
+eiikllps	lisplike
+aeefrstu	features
+chsu	such
+as	as
+an	an
+aceegiinrttv	intgeractive
+acdmmno	command
+loop	loop
+adn	and
+adfinopstx	stopandfix
+bdeggginu	debugging
+ilps	lisp
+eeimnnnorstv	environments
+aer	are
+illst	still
+aadeh	ahead
+btu	but
+ahtt	that
+abblopry	probably
+notw	wont
+alst	last
+glno	long
+bejlu	bluej
+in	in
+aacilprrtu	particular
+ahs	has
+most	most
+fo	of
+eht	the
+ajmor	major
+aeefrstu	features
+fo	of
+a	a
+dgoo	good
+ilps	lisp
+eeimnnnortv	environment
+ouy	you
+acn	can
+ceeilmopr	recompile
+a	a
+dehmot	method
+inot	into
+a	a
+ginnnru	running
+agmoprr	program
+adn	and
+ouy	you
+acn	can
+epty	type
+in	in
+an	an
+eeinoprssx	expression
+adn	and
+aehv	have
+it	it
+aadeeltuv	evaluated
+adeeiilmmty	immediately
+it	it
+is	is
+ddeeinnt	intended
+for	for
+aceghint	teaching
+eopprssu	purposes
+adn	and
+i	i
+acnt	cant
+ellt	tell
+fi	if
+it	it
+is	is
+abeilstu	suitable
+for	for
+cdinooprtu	production
+esu	use
+hnopty	python
+ahs	has
+eht	the
+aems	same
+aceeiinrttv	interactive
+aachoppr	approach
+as	as
+ilps	lisp
+btu	but
+eht	the
+eeimnnnortv	environment
+is	is
+elss	less
+aemrtu	mature
+ahnt	than
+ilpss	lisps
+beeiiilnsttxy	extensibility
+hist	this
+amy	may
+eoprv	prove
+ot	to
+be	be
+aajsv	javas
+aekw	weak
+inopt	point
+aajv	java
+korsw	works
+ellw	well
+as	as
+glno	long
+as	as
+ouy	you
+aer	are
+giillnw	willing
+ot	to
+aekm	make
+eeghinrtvy	everything
+a	a
+aclss	class
+fi	if
+eghimnost	something
+enw	new
+eikl	like
+asy	say
+acdeeeinoprstt	aspectoriented
+aggimmnoprr	programming
+aekst	takes
+ffo	off
+ilps	lisp
+dlouw	would
+be	be
+abel	able
+ot	to
+aceinooprrt	incorporate
+it	it
+hitw	with
+acmors	macros
+btu	but
+aajv	java
+dlouw	would
+not	not
+hiorsty	history
+ilps	lisp
+ahs	has
+eorv	over
+	
+aersy	years
+fo	of
+hiorsty	history
+aajv	java
+ahs	has
+	
+hnopty	python
+	
+eno	one
+emor	more
+aimnoprtt	important
+aeefrtu	feature
+ahtt	that
+ddint	didnt
+aekm	make
+hist	this
+ilst	list
+is	is
+cceeffiiny	efficiency
+ilps	lisp
+is	is
+abotu	about
+	
+ot	to
+	
+eimst	times
+aefrst	faster
+ahnt	than
+aajv	java
+adn	and
+abotu	about
+	
+ot	to
+	
+eimst	times
+aefrst	faster
+ahnt	than
+hnopty	python
+ilps	lisp
+is	is
+abblopry	probably
+hiintw	within
+	
+ot	to
+	
+fo	of
+cc	cc
+in	in
+cceeffiiny	efficiency
+no	on
+most	most
+aksst	tasks
+chhiw	which
+is	is
+celos	close
+eghnou	enough
+ahtt	that
+eht	the
+cdeeeffinrs	differences
+ddeenp	depend
+emor	more
+no	on
+eht	the
+aegmmoprrrs	programmers
+deilnovv	involved
+ahnt	than
+eht	the
+aaegglnu	language
+adn	and
+celos	close
+eghnou	enough
+ahtt	that
+for	for
+most	most
+aaciilnoppst	applications
+ahtt	that
+deeps	speed
+is	is
+not	not
+an	an
+eissu	issue
+for	for
+ilps	lisp
+ouy	you
+illw	will
+deen	need
+ot	to
+cdeo	code
+aceinrt	certain
+ghinst	things
+aacillprrtuy	particularly
+giilnnovv	involving
+emmory	memory
+aaeegmmnnt	management
+ginsu	using
+eht	the
+ceehinqstu	techniques
+in	in
+eht	the
+bkoo	book
+chsu	such
+as	as
+emmory	memory
+ceeorrssu	resources
+hist	this
+is	is
+emor	more
+korw	work
+for	for
+eht	the
+aegmmoprrr	programmer
+btu	but
+is	is
+o	o
+deeffinrt	different
+fmor	from
+ahtw	what
+c	c
+effors	offers
+hitw	with
+lst	stl
+aaclloorst	allocators
+hnopty	python
+is	is
+a	a
+deeffinrt	different
+orsty	story
+eehrt	there
+is	is
+a	a
+aeglr	large
+aclss	class
+fo	of
+belmoprs	problems
+for	for
+chhiw	which
+hnopty	python
+is	is
+oot	too
+losw	slow
+ist	its
+adhr	hard
+ot	to
+egt	get
+abcehkmnr	benchmark
+aadt	data
+ahtt	that
+is	is
+eeelnrtv	relevent
+ot	to
+oruy	your
+est	set
+fo	of
+aaciilnoppst	applications
+btu	but
+eehrs	heres
+emos	some
+aadt	data
+aeeilrtv	relative
+deepss	speeds
+fo	of
+	
+aaegglnsu	languages
+no	on
+	
+abcehkmnrs	benchmarks
+fmor	from
+eht	the
+aegrt	great
+cemoprtu	computer
+aaegglnu	language
+hooosttu	shootout
+deepss	speeds
+aer	are
+adeilmnorz	normalized
+os	so
+eht	the
+g	g
+ceilmopr	compiler
+for	for
+c	c
+is	is
+	
+os	so
+	
+aemns	means
+ceitw	twice
+as	as
+losw	slow
+	
+aemns	means
+	
+eimst	times
+aefrst	faster
+abcdgknoru	background
+cloors	colors
+aer	are
+cddeo	coded
+accdginor	according
+ot	to
+deegln	legend
+no	on
+ghirt	right
+eht	the
+alst	last
+eiln	line
+aeeimsstt	estimates
+eht	the
+	
+ot	to
+	
+aeilqrstu	quartiles
+by	by
+ghinortw	throwing
+otu	out
+eht	the
+bmoott	bottom
+otw	two
+adn	and
+opt	top
+otw	two
+ceorss	scores
+for	for
+aceh	each
+aaegglnu	language
+estt	test
+ilps	lisp
+aajv	java
+hnopty	python
+elpr	perl
+c	c
+ceeinoptx	exception
+adghilnn	handling
+	
+	
+	
+	
+	
+ahhs	hash
+access	access
+	
+	
+	
+	
+	
+msu	sum
+bemnrsu	numbers
+fmor	from
+efil	file
+	
+	
+	
+	
+	
+	
+x	x
+c	c
+eeerrsv	reverse
+eilns	lines
+	
+	
+	
+	
+	
+	
+x	x
+c	c
+aimrtx	matrix
+aciiillmnopttu	multiplication
+	
+	
+	
+	
+	
+	
+x	x
+c	c
+aehoprst	heapsort
+	
+	
+	
+	
+	
+	
+x	x
+c	c
+aarry	array
+access	access
+	
+	
+	
+	
+	
+	
+x	x
+c	c
+ilst	list
+ceginoprss	processing
+	
+	
+	
+	
+	
+	
+x	x
+c	c
+bcejot	object
+aaiiinnnosttt	instantiation
+	
+	
+	
+	
+	
+dorw	word
+cnotu	count
+	
+	
+	
+	
+	
+	
+ot	to
+	
+	
+ot	to
+	
+	
+ot	to
+	
+	
+ot	to
+	
+	
+ot	to
+	
+	
+ot	to
+	
+aellorv	overall
+ilps	lisp
+deos	does
+ervy	very
+ellw	well
+no	on
+eht	the
+einn	nine
+aeefrstu	features
+aennoy	anyone
+agikmn	making
+an	an
+bceeijotv	objective
+ccehio	choice
+abdes	based
+no	on
+eehst	these
+aeefrstu	features
+dlouw	would
+ceinnotu	continue
+ot	to
+dfin	find
+ilps	lisp
+eht	the
+best	best
+ccehio	choice
+for	for
+a	a
+deiw	wide
+aegnr	range
+fo	of
+aaciilnoppst	applications
+btu	but
+eehrt	there
+aer	are
+now	now
+abeilv	viable
+cdeennorst	contenders
+ahtt	that
+ddi	did
+not	not
+eistx	exist
+in	in
+	
+is	is
+ilps	lisp
+alnoppruu	unpopular
+now	now
+eno	one
+cciiimrst	criticism
+fo	of
+ilps	lisp
+is	is
+ahtt	that
+it	it
+is	is
+not	not
+as	as
+aloppru	popular
+as	as
+ehort	other
+aaegglnsu	languages
+adn	and
+hstu	thus
+ahs	has
+a	a
+aellmrs	smaller
+cimmnotuy	community
+fo	of
+erssu	users
+adn	and
+elss	less
+deeelmnoptv	development
+aciittvy	activity
+adnoru	around
+it	it
+eht	the
+aijmorty	majority
+fo	of
+eht	the
+dinrstuy	industry
+abblopry	probably
+eefls	feels
+ahtt	that
+ilps	lisp
+ahs	has
+bceemo	become
+elss	less
+aeelnrtv	relevant
+adn	and
+ahtt	that
+aajv	java
+is	is
+agiknt	taking
+eorv	over
+as	as
+eht	the
+aaegglnu	language
+fo	of
+ccehio	choice
+my	my
+ceeinopprt	perception
+in	in
+	
+asw	was
+ahtt	that
+ilps	lisp
+adh	had
+dehl	held
+no	on
+ot	to
+most	most
+fo	of
+ist	its
+affhiltu	faithful
+erssu	users
+adn	and
+addde	added
+emos	some
+enw	new
+enos	ones
+ehilw	while
+ddeein	indeed
+chmu	much
+fo	of
+eht	the
+erst	rest
+fo	of
+eht	the
+dlorw	world
+adh	had
+dehrsu	rushed
+first	first
+ot	to
+c	c
+adn	and
+ehnt	then
+ot	to
+aajv	java
+chhiw	which
+is	is
+accghint	catching
+pu	up
+afst	fast
+btu	but
+c	c
+illst	still
+dhlos	holds
+a	a
+bgi	big
+adel	lead
+hstu	thus
+ilps	lisp
+asw	was
+in	in
+a	a
+abelst	stable
+abelostu	absolute
+iinoopst	position
+btu	but
+a	a
+aeekrw	weaker
+aeeilrtv	relative
+iinoopst	position
+abceesu	because
+fo	of
+eht	the
+acdeeinrs	increased
+opprstu	support
+for	for
+eht	the
+aijmorty	majority
+aaegglnsu	languages
+c	c
+adn	and
+aajv	java
+adn	and
+elss	less
+aaccceenpt	acceptance
+fo	of
+a	a
+deiw	wide
+aegnr	range
+fo	of
+aaegglnsu	languages
+eht	the
+ajmor	major
+ilps	lisp
+denorsv	vendors
+aehilnqru	harlequin
+for	for
+hmow	whom
+i	i
+dekorw	worked
+for	for
+otw	two
+aersy	years
+adn	and
+afnrz	franz
+eerw	were
+at	at
+ahtt	that
+eimt	time
+eginoprrt	reporting
+adesty	steady
+acegiinnrs	increasing
+aelss	sales
+i	i
+anstw	wasnt
+os	so
+ersu	sure
+abotu	about
+dgiiloot	digitool
+ehty	they
+aekm	make
+a	a
+efin	fine
+cdoprtu	product
+btu	but
+it	it
+is	is
+acm	mac
+lnoy	only
+adn	and
+eht	the
+acm	mac
+is	is
+adilpry	rapidly
+gilnos	losing
+aekmrt	market
+aehrs	share
+abemy	maybe
+ehty	they
+illw	will
+cemo	come
+abck	back
+egnorrst	stronger
+no	on
+eht	the
+eehls	heels
+fo	of
+os	os
+x	x
+ilps	lisp
+asw	was
+illst	still
+begin	being
+demooprt	promoted
+in	in
+a	a
+eklowy	lowkey
+awy	way
+by	by
+behilprssu	publishers
+adn	and
+bdeiirrssttu	distributers
+eikl	like
+aamnoz	amazon
+ilps	lisp
+ceinnostu	continues
+ot	to
+ejnoy	enjoy
+cekopst	pockets
+fo	of
+acceilmmor	commercial
+ccesssu	success
+alpu	paul
+aaghmr	graham
+ceelnrty	recently
+dlos	sold
+a	a
+ilps	lisp
+agmoprr	program
+adn	and
+eht	the
+acmnopy	company
+adnoru	around
+it	it
+ot	to
+ahooy	yahoo
+for	for
+	
+iillmno	million
+it	it
+asw	was
+an	an
+aghinortu	authoring
+loot	tool
+for	for
+eilnno	online
+eorsst	stores
+biortz	orbitz
+eno	one
+fo	of
+eht	the
+adegiln	leading
+aelrtv	travel
+cceeemmor	ecommerce
+eisst	sites
+deos	does
+cdeehlsu	schedule
+aiiimnoopttz	optimization
+ginsu	using
+a	a
+ilps	lisp
+emssty	system
+deilppsu	supplied
+by	by
+aclr	carl
+de	de
+acekmnrs	marckens
+acmnopy	company
+ait	ita
+aeforstw	software
+eht	the
+chlptt	clhttp
+bew	web
+eerrsv	server
+is	is
+in	in
+deiw	wide
+esu	use
+emos	some
+fo	of
+eht	the
+best	best
+korw	work
+in	in
+abcfiiimnoorst	bioinformatics
+is	is
+deno	done
+in	in
+ilps	lisp
+for	for
+emor	more
+aeelmpsx	examples
+ees	see
+eht	the
+afnrz	franz
+bew	web
+eist	site
+eht	the
+ciikl	cliki
+deinx	index
+ilsst	lists
+cmmnoo	common
+ilps	lisp
+ceeorrssu	resources
+btu	but
+ehty	they
+aer	are
+not	not
+all	all
+abeloprt	portable
+acorss	across
+cl	cl
+aeeiilmmnnopstt	implementations
+eht	the
+ilnux	linux
+eeklwy	weekly
+ensw	news
+eht	the
+enop	open
+cdeiorrty	directory
+enrty	entry
+for	for
+ilps	lisp
+eht	the
+acgillmnopps	complanglisp
+egnoprsuw	newsgroup
+in	in
+	
+eht	the
+adgnr	grand
+ehops	hopes
+for	for
+aajv	java
+aehv	have
+not	not
+adennp	panned
+otu	out
+aajv	java
+ejnosy	enjoys
+aegrt	great
+ailopprtuy	popularity
+in	in
+eht	the
+eeeinprrst	enterprise
+aceps	space
+btu	but
+ahs	has
+not	not
+aeknt	taken
+eorv	over
+as	as
+a	a
+aeeglnr	general
+eopprsu	purpose
+adipr	rapid
+deeelmnoptv	development
+aaegglnu	language
+nor	nor
+as	as
+an	an
+ceeffiint	efficient
+emsssty	systems
+aaegglnu	language
+aceefmnoprr	performance
+fo	of
+aajv	java
+aeimnrs	remains
+adilms	dismal
+ehnw	when
+acdemopr	compared
+ot	to
+c	c
+or	or
+ot	to
+ilps	lisp
+im	im
+not	not
+ersu	sure
+hwy	why
+ahtt	that
+is	is
+nsu	sun
+aceilnrty	certainly
+ahs	has
+adh	had
+eghnou	enough
+eimt	time
+adn	and
+ceeorrssu	resources
+ot	to
+eeilmmnpt	implement
+a	a
+beertt	better
+emssty	system
+abemy	maybe
+ehty	they
+dhlosu	should
+aehv	have
+dehir	hired
+emor	more
+ceeeiiillmopprrrsstwx	exlispcompilerwriters
+defr	fred
+bkoors	brooks
+is	is
+deeoprrt	reported
+ot	to
+aehv	have
+adis	said
+emor	more
+erssu	users
+dfin	find
+emor	more
+bgsu	bugs
+i	i
+dnot	dont
+hiknt	think
+ahstt	thats
+a	a
+belmopr	problem
+for	for
+ilps	lisp
+ilps	lisp
+ahs	has
+adh	had
+eghnou	enough
+aeerrssuy	useryears
+ahtt	that
+it	it
+is	is
+emor	more
+abelst	stable
+ahnt	than
+eht	the
+ehort	other
+aaegglnsu	languages
+ew	we
+illw	will
+cdisssu	discuss
+eehr	here
+btu	but
+eht	the
+aiinosttu	situation
+for	for
+ilps	lisp
+in	in
+emrst	terms
+fo	of
+ailopprtuy	popularity
+illst	still
+aeelrsv	reveals
+a	a
+aeeknssw	weakness
+eht	the
+aaegglnu	language
+aaddnrst	standard
+ahs	has
+aadegnstt	stagnated
+hiottuw	without
+addeginrss	addressing
+emos	some
+eky	key
+eisssu	issues
+eikl	like
+adeghinrt	threading
+cekosst	sockets
+adn	and
+ehorst	others
+eefhmorrrtu	furthermore
+eehrt	there
+is	is
+no	no
+ekllnnoww	wellknown
+aaddnrst	standard
+eiooprrsty	repository
+fo	of
+abeiilrrs	libraries
+for	for
+enw	new
+cloooprst	protocols
+eikl	like
+hptt	http
+hlmt	html
+lmx	xml
+aops	soap
+cet	etc
+addiiilnuv	individual
+aeeiilmmnnopstt	implementations
+add	add
+abeiilrrs	libraries
+for	for
+eehst	these
+adn	and
+addiiilnuv	individual
+aegmmoprrrs	programmers
+aceert	create
+ceenooprsu	opensource
+aeeiilmmnnopstt	implementations
+btu	but
+ouy	you
+dnot	dont
+egt	get
+ehmt	them
+ghirt	right
+otu	out
+fo	of
+eht	the
+box	box
+eikl	like
+ouy	you
+do	do
+hitw	with
+aajv	java
+or	or
+hnopty	python
+nor	nor
+acn	can
+ouy	you
+dfin	find
+ehmt	them
+at	at
+a	a
+egilns	single
+acilnoot	location
+eikl	like
+elprs	perls
+acnp	cpan
+hist	this
+aemns	means
+ahtt	that
+it	it
+aekst	takes
+emor	more
+korw	work
+ot	to
+hntu	hunt
+eehst	these
+abeiilrrs	libraries
+dnow	down
+adn	and
+emos	some
+aegmmoprrrs	programmers
+diimsss	dismiss
+ilps	lisp
+for	for
+a	a
+cejoprt	project
+abceesu	because
+ehty	they
+dnot	dont
+adeeiilmmty	immediately
+dfin	find
+eht	the
+abeiilrrs	libraries
+ehty	they
+deen	need
+c	c
+afillny	finally
+ahs	has
+eht	the
+aaddnrst	standard
+aeelmptt	template
+abilrry	library
+chhiw	which
+aeimnrs	remains
+chmu	much
+adehrr	harder
+ot	to
+esu	use
+ahnt	than
+ilpss	lisps
+ceeenqsu	sequence
+cfinnostu	functions
+btu	but
+is	is
+aabcelp	capable
+fo	of
+aegrt	great
+aceefmnoprr	performance
+in	in
+eht	the
+adhns	hands
+fo	of
+adirwz	wizard
+lst	stl
+aegmmoprrrs	programmers
+adn	and
+fo	of
+aegrt	great
+aacdeehhs	headaches
+in	in
+eht	the
+adhns	hands
+fo	of
+aaeegrv	average
+aegmmoprrrs	programmers
+ilps	lisp
+eeprstx	experts
+aer	are
+illst	still
+as	as
+cdeioprtuv	productive
+as	as
+eerv	ever
+btu	but
+eenrw	newer
+aegmmoprrrs	programmers
+aer	are
+elss	less
+eiklly	likely
+ot	to
+cikp	pick
+pu	up
+ilps	lisp
+cdeinors	consider
+eht	the
+fgillnoow	following
+aeemrssu	measures
+fo	of
+aaegglnu	language
+ailopprtuy	popularity
+in	in
+	
+i	i
+dekloo	looked
+at	at
+	
+aaegglnsu	languages
+in	in
+	
+i	i
+adenorrw	narrowed
+eht	the
+defil	field
+ot	to
+	
+	
+aaegglnu	language
+bkoos	books
+eenstu	usenet
+aceilrst	articles
+ceenrt	recent
+aceilrst	articles
+lrsu	urls
+bjos	jobs
+agv	avg
+aknr	rank
+c	c
+	
+	
+	
+	
+	
+	
+aajv	java
+	
+	
+	
+	
+	
+	
+all	all
+ilpss	lisps
+	
+	
+	
+	
+	
+	
+elpr	perl
+	
+	
+	
+	
+	
+	
+aaklllmst	smalltalk
+	
+	
+	
+	
+	
+	
+ilps	lisp
+	
+	
+	
+	
+	
+	
+gloopr	prolog
+	
+	
+	
+	
+	
+	
+eeffil	eiffel
+	
+	
+	
+	
+	
+	
+ceehms	scheme
+	
+	
+	
+	
+	
+	
+adlny	dylan
+	
+	
+	
+	
+	
+	
+for	for
+	
+cemoprtu	computer
+aaegglnsu	languages
+hist	this
+achrt	chart
+aeimmrssuz	summarizes
+eht	the
+bemnru	number
+fo	of
+bkoos	books
+deeffor	offered
+at	at
+aamnoz	amazon
+eht	the
+bemnru	number
+fo	of
+acdehirv	archived
+adn	and
+ceenrt	recent
+ensw	news
+aceilrst	articles
+in	in
+acglmnop	complang
+at	at
+adeejnsw	dejanews
+eht	the
+bemnru	number
+fo	of
+hist	hits
+no	on
+eht	the
+eqruy	query
+aaegglnu	language
+cemoprtu	computer
+at	at
+eefiknos	infoseek
+adn	and
+eht	the
+bemnru	number
+fo	of
+bjos	jobs
+deeffor	offered
+at	at
+ceehstw	westech
+eht	the
+cemoprtu	computer
+is	is
+desu	used
+abceesu	because
+amny	many
+fo	of
+eht	the
+aaegglnu	language
+aemns	names
+aer	are
+abgimosuu	ambiguous
+eeffil	eiffel
+eortw	tower
+aajv	java
+diknr	drink
+all	all
+ilpss	lisps
+aemns	means
+acdeehillmnpssy	lispschemedylan
+ilps	lisp
+is	is
+acellry	clearly
+bdehin	behind
+c	c
+adn	and
+aajv	java
+btu	but
+at	at
+aelst	least
+in	in
+eht	the
+aabkllpr	ballpark
+for	for
+all	all
+aeemrssu	measures
+ceeptx	except
+bjos	jobs
+ilps	lisp
+is	is
+ghillsty	slightly
+aadeh	ahead
+fo	of
+elpr	perl
+abegint	beating
+it	it
+in	in
+	
+fo	of
+	
+aeemrssu	measures
+	
+aaegglnu	language
+bkoos	books
+eenstu	usenet
+aceilrst	articles
+lrsu	urls
+bjos	jobs
+agv	avg
+aknr	rank
+aajv	java
+	
+	
+	
+	
+	
+c	c
+	
+	
+	
+	
+	
+elpr	perl
+	
+	
+	
+	
+	
+hnopty	python
+	
+	
+	
+	
+	
+ilps	lisp
+	
+	
+	
+	
+	
+for	for
+	
+cemoprtu	computer
+aaegglnsu	languages
+hist	this
+achrt	chart
+aeimmrssuz	summarizes
+eht	the
+bemnru	number
+fo	of
+bkoos	books
+deeffor	offered
+at	at
+aamnoz	amazon
+eht	the
+bemnru	number
+fo	of
+ensw	news
+aceilrst	articles
+in	in
+acglmnop	complang
+at	at
+eggloo	google
+goprsu	groups
+eht	the
+bemnru	number
+fo	of
+hist	hits
+no	on
+eht	the
+eqruy	query
+aaegglnu	language
+cemoprtu	computer
+at	at
+eggloo	google
+adn	and
+eht	the
+bemnru	number
+fo	of
+bjos	jobs
+deeffor	offered
+at	at
+cemmnoorst	monstercom
+aacgilnnoorsttu	congratulations
+ot	to
+aamnoz	amazon
+for	for
+begin	being
+eht	the
+lnoy	only
+eno	one
+ot	to
+aeimnr	remain
+eht	the
+deefiiintv	definitive
+aacdeeeglorrty	categoryleader
+for	for
+efiv	five
+aersy	years
+aajv	java
+ahs	has
+now	now
+demov	moved
+aadeh	ahead
+fo	of
+c	c
+in	in
+ailopprtuy	popularity
+elpr	perl
+ahs	has
+demov	moved
+pu	up
+ot	to
+eehrw	where
+it	it
+is	is
+aelnry	nearly
+ceeiimopttv	competitive
+hitw	with
+eht	the
+bgi	big
+otw	two
+adn	and
+ilps	lisp
+ahs	has
+demov	moved
+dnow	down
+now	now
+abegin	beaing
+an	an
+deorr	order
+fo	of
+adegimntu	magnitude
+bdehin	behind
+eht	the
+ehorst	others
+in	in
+most	most
+aceegiorst	categories
+hnopty	python
+deegs	edges
+otu	out
+ilps	lisp
+in	in
+	
+fo	of
+	
+aceegiorst	categories
+eehst	these
+aeeemmnrsstu	measurements
+aer	are
+eprtty	pretty
+ccefiiinnstu	unscientific
+adn	and
+amy	may
+not	not
+aemn	mean
+chmu	much
+aefrt	after
+i	i
+ddi	did
+ehmt	them
+i	i
+abceem	became
+aaerw	aware
+fo	of
+aehnort	another
+dstuy	study
+deno	done
+by	by
+beiot	tiobe
+aeforstw	software
+ahtt	that
+ahs	has
+aajv	java
+bemnru	number
+	
+c	c
+adn	and
+c	c
+at	at
+	
+	
+adn	and
+ilps	lisp
+at	at
+	
+hitw	with
+a	a
+aekmrt	market
+aehrs	share
+ht	th
+fo	of
+aajv	java
+aloppru	popular
+deos	does
+not	not
+aemn	mean
+beertt	better
+adn	and
+eehst	these
+bemnrsu	numbers
+amy	may
+not	not
+aceelorrt	correlate
+ceeflprty	perfectly
+hitw	with
+ailopprtuy	popularity
+btu	but
+ehty	they
+do	do
+asy	say
+eghimnost	something
+is	is
+ilps	lisp
+at	at
+aelst	least
+aloppru	popular
+for	for
+ai	ai
+in	in
+	
+adn	and
+	
+eht	the
+aenrsw	answer
+asw	was
+acellry	clearly
+esy	yes
+btu	but
+in	in
+	
+eht	the
+aenrsw	answer
+is	is
+elss	less
+acelr	clear
+cdeinors	consider
+eht	the
+bemnru	number
+fo	of
+elrsstu	results
+for	for
+eht	the
+fgillnoow	following
+eggloo	google
+aceehrss	searches
+acehrs	search
+bemnru	number
+fo	of
+elrsstu	results
+acehrs	search
+bemnru	number
+fo	of
+elrsstu	results
+aajv	java
+ai	ai
+	
+aajv	java
+aacfiiilrt	artificial
+ceeegiillnnt	intelligence
+	
+c	c
+ai	ai
+	
+c	c
+aacfiiilrt	artificial
+ceeegiillnnt	intelligence
+	
+ilps	lisp
+ai	ai
+	
+ilps	lisp
+aacfiiilrt	artificial
+ceeegiillnnt	intelligence
+	
+elpr	perl
+ai	ai
+	
+elpr	perl
+aacfiiilrt	artificial
+ceeegiillnnt	intelligence
+	
+hnopty	python
+ai	ai
+	
+hnopty	python
+aacfiiilrt	artificial
+ceeegiillnnt	intelligence
+	
+it	it
+ahs	has
+been	been
+bioosuv	obvious
+ot	to
+most	most
+beeorrssv	observers
+ahtt	that
+eht	the
+acehimn	machine
+aegilnnr	learning
+cimmnotuy	community
+in	in
+aacilprrtu	particular
+ahs	has
+demov	moved
+aawy	away
+fmor	from
+ilps	lisp
+adorstw	towards
+c	c
+or	or
+ot	to
+acdeeiilpsz	specialized
+aaacehilmmtt	mathematical
+aacegkps	packages
+eikl	like
+aablmt	matlab
+btu	but
+im	im
+aaclltuy	actually
+deiprrssu	surprised
+ahtt	that
+eht	the
+denrt	trend
+ahs	has
+egno	gone
+hist	this
+afr	far
+adn	and
+im	im
+ervy	very
+deiprrssu	surprised
+ot	to
+ees	see
+aajv	java
+no	on
+opt	top
+abceesu	because
+i	i
+jstu	just
+aehntv	havent
+eens	seen
+ahtt	that
+chmu	much
+chnooptt	topnotch
+aajv	java
+ai	ai
+cdeo	code
+im	im
+alos	also
+aademz	amazed
+ahtt	that
+elpr	perl
+ai	ai
+aeprssssu	surpasses
+ilps	lisp
+ai	ai
+btu	but
+i	i
+cepsstu	suspect
+ahtt	that
+eehrst	theres
+emos	some
+ehort	other
+aegimnn	meaning
+fo	of
+ai	ai
+in	in
+eht	the
+elpr	perl
+dlorw	world
+abceesu	because
+elpr	perl
+aacfiiilrt	artificial
+ceeegiillnnt	intelligence
+is	is
+ellw	well
+bdehin	behind
+ilps	lisp
+aacfiiilrt	artificial
+ceeegiillnnt	intelligence
+enw	new
+ilps	lisp
+bkoos	books
+eht	the
+best	best
+in	in
+my	my
+iinnoop	opinion
+aer	are
+alpu	paul
+aaghmrs	grahams
+no	on
+ilps	lisp
+adn	and
+ains	ansi
+cmmnoo	common
+ilps	lisp
+abblopry	probably
+eht	the
+best	best
+bkoo	book
+eerv	ever
+no	on
+how	how
+ot	to
+eirtw	write
+ilps	lisp
+ceilmoprs	compilers
+adn	and
+eeeinprrrstt	interpreters
+is	is
+achiinrst	christian
+ceeinnqsu	queinnecs
+ilps	lisp
+in	in
+allms	small
+ceeips	pieces
+in	in
+eht	the
+ceehms	scheme
+dlorw	world
+abelnos	abelson
+adn	and
+amnsssu	sussman
+aehv	have
+a	a
+enw	new
+deiinot	edition
+fo	of
+cerrsttuu	structure
+adn	and
+aeeiinnoprrttt	interpretation
+fo	of
+cemoprtu	computer
+agmoprrs	programs
+adn	and
+adeiln	daniel
+adefimnr	friedman
+ahs	has
+a	a
+enw	new
+einorsv	version
+fo	of
+eht	the
+eilltt	little
+eilprs	lisper
+acdell	called
+eht	the
+adeenoss	seasoned
+ceehmrs	schemer
+eehnpst	stephen
+adels	slade
+ahs	has
+a	a
+enw	new
+bkoo	book
+chhiw	which
+i	i
+aehv	have
+not	not
+adh	had
+a	a
+accehn	chance
+ot	to
+ader	read
+ety	yet
+ahtw	what
+elnosss	lessons
+aer	are
+in	in
+aipp	paip
+eehr	here
+is	is
+my	my
+ilst	list
+fo	of
+eht	the
+	
+most	most
+aimnoprtt	important
+elnosss	lessons
+in	in
+aipp	paip
+esu	use
+amnnoosuy	anonymous
+cfinnostu	functions
+p	p
+	
+aceert	create
+enw	new
+cfinnostu	functions
+celorssu	closures
+at	at
+nru	run
+eimt	time
+p	p
+	
+esu	use
+eht	the
+most	most
+aalnrtu	natural
+ainnoott	notation
+aaabeillv	available
+ot	to
+elosv	solve
+a	a
+belmopr	problem
+p	p
+	
+esu	use
+eht	the
+aems	same
+aadt	data
+for	for
+aeelrsv	several
+agmoprrs	programs
+p	p
+	
+be	be
+ccefiips	specific
+esu	use
+aabcinorsstt	abstractions
+be	be
+cceinos	concise
+esu	use
+eht	the
+ddeioprv	provided
+loost	tools
+dnot	dont
+be	be
+bceorsu	obscure
+be	be
+ceinnosstt	consistent
+p	p
+	
+esu	use
+acmors	macros
+fi	if
+aellry	really
+aceenrssy	necessary
+p	p
+	
+eehrt	there
+aer	are
+	
+or	or
+	
+ajmor	major
+aadt	data
+epsty	types
+aaefiiilmrz	familiarize
+eflorsuy	yourself
+hitw	with
+ehmt	them
+p	p
+	
+eeehnrvw	whenever
+ouy	you
+deelopv	develop
+a	a
+celmopx	complex
+aadt	data
+cerrsttuu	structure
+deelopv	develop
+a	a
+cdeginnooprrs	corresponding
+cceinnossty	consistency
+cceehkr	checker
+p	p
+	
+ot	to
+elosv	solve
+a	a
+belmopr	problem
+bcdeeirs	describe
+it	it
+cefipsy	specify
+it	it
+in	in
+acghiilmort	algorithmic
+emrst	terms
+eeilmmnpt	implement
+it	it
+estt	test
+it	it
+bdegu	debug
+adn	and
+aaelnyz	analyze
+it	it
+ceeptx	expect
+hist	this
+ot	to
+be	be
+an	an
+aeeiirttv	iterative
+ceoprss	process
+p	p
+	
+ai	ai
+aggimmnoprr	programming
+is	is
+aegllry	largely
+aelooprrtxy	exploratory
+aggimmnoprr	programming
+eht	the
+aim	aim
+is	is
+efnot	often
+ot	to
+cdeiorsv	discover
+emor	more
+abotu	about
+eht	the
+belmopr	problem
+aaer	area
+p	p
+	
+a	a
+aeeglnr	general
+belmopr	problem
+elorsv	solver
+dhlosu	should
+be	be
+abel	able
+ot	to
+elosv	solve
+deeffinrt	different
+belmoprs	problems
+p	p
+	
+ew	we
+mstu	must
+eirsst	resist
+eht	the
+aeimnopttt	temptation
+ot	to
+beeilv	belive
+ahtt	that
+all	all
+ghiiknnt	thinking
+flloosw	follows
+eht	the
+aacilmnoopttu	computational
+delmo	model
+p	p
+	
+eht	the
+aimn	main
+bcejot	object
+fo	of
+hist	this
+bkoo	book
+is	is
+ot	to
+acesu	cause
+eht	the
+adeerr	reader
+ot	to
+asy	say
+ot	to
+him	him
+or	or
+eefhlrs	herself
+i	i
+cdlou	could
+aehv	have
+einrttw	written
+ahtt	that
+p	p
+	
+fi	if
+ew	we
+eflt	left
+otu	out
+eht	the
+mopprt	prompt
+ew	we
+cdlou	could
+eirtw	write
+a	a
+ceelmopt	complete
+ilps	lisp
+eeeinprrrtt	interpreter
+ginsu	using
+jstu	just
+foru	four
+blmossy	symbols
+cdeinors	consider
+ahtw	what
+ew	we
+dlouw	would
+aehv	have
+ot	to
+do	do
+ot	to
+eirtw	write
+a	a
+ilps	lisp
+or	or
+aaclps	pascal
+or	or
+aajv	java
+eeeinprrrtt	interpreter
+in	in
+aaclps	pascal
+or	or
+aajv	java
+p	p
+	
+degins	design
+aenprstt	patterns
+acn	can
+be	be
+desu	used
+afillmnory	informally
+or	or
+acn	can
+be	be
+aabcderstt	abstracted
+inot	into
+a	a
+aflmor	formal
+cfinnotu	function
+acmor	macro
+or	or
+aadt	data
+epty	type
+efnot	often
+giilnnovv	involving
+deeghhiorrr	higherorder
+cfinnostu	functions
+p	p
+	
+esu	use
+aaddeinrtv	datadriven
+aggimmnoprr	programming
+eehrw	where
+aaceinnoprttt	patternaction
+aiprs	pairs
+aer	are
+deorst	stored
+in	in
+a	a
+abelt	table
+p	p
+	
+eeimmosst	sometimes
+emor	more
+is	is
+elss	less
+ist	its
+aeeirs	easier
+ot	to
+cdeopru	produce
+emor	more
+opttuu	output
+ahnt	than
+jstu	just
+eht	the
+ghirt	right
+opttuu	output
+p	p
+	
+ilps	lisp
+is	is
+not	not
+eehilnnrty	inherently
+elss	less
+ceeffiint	efficient
+ahnt	than
+ehort	other
+eeghhillv	highlevel
+aaegglnsu	languages
+	
+acdhirr	richard
+aaefmnt	fateman
+p	p
+	
+first	first
+deelopv	develop
+a	a
+giknorw	working
+agmoprr	program
+cdenos	second
+eimnnrsttu	instrument
+it	it
+dhirt	third
+aceelpr	replace
+eht	the
+losw	slow
+aprst	parts
+p	p
+	
+eht	the
+eeprtx	expert
+ilps	lisp
+aegmmoprrr	programmer
+aeellntuvy	eventually
+deelopsv	develops
+a	a
+dgoo	good
+cceeffiiny	efficiency
+delmo	model
+p	p
+	
+eehrt	there
+aer	are
+foru	four
+aeeglnr	general
+ceehinqstu	techniques
+for	for
+deeginps	speeding
+pu	up
+an	an
+aghilmort	algorithm
+accghin	caching
+cgiilmnop	compiling
+adegilny	delaying
+acimnoopttu	computation
+adn	and
+degiinnx	indexing
+p	p
+	
+ew	we
+acn	can
+eirtw	write
+a	a
+ceilmopr	compiler
+as	as
+a	a
+est	set
+fo	of
+acmors	macros
+p	p
+	
+aciilmnoopt	compilation
+adn	and
+aeiimmnootz	memoization
+acn	can
+deily	yield
+dflo	fold
+deeppssu	speedups
+p	p
+	
+eelllovw	lowlevel
+cceeffiiny	efficiency
+ccennors	concerns
+acn	can
+deily	yield
+dflo	fold
+deeppssu	speedups
+p	p
+	
+for	for
+cceeffiiny	efficiency
+esu	use
+aacdeilnorst	declarations
+adiov	avoid
+ceeginr	generic
+cfinnostu	functions
+adiov	avoid
+celmopx	complex
+aegmnrtu	argument
+ilsst	lists
+adiov	avoid
+aceennrssuy	unnecessary
+cginnos	consing
+esu	use
+eht	the
+ghirt	right
+aadt	data
+cerrsttuu	structure
+p	p
+	
+a	a
+aaegglnu	language
+ahtt	that
+denost	doesnt
+acefft	affect
+eht	the
+awy	way
+ouy	you
+hiknt	think
+abotu	about
+aggimmnoprr	programming
+is	is
+not	not
+hortw	worth
+giknnow	knowing
+	
+aaln	alan
+eilprs	perlis
+p	p
+	
+gloopr	prolog
+eeilrs	relies
+no	on
+eehrt	three
+aimnoprtt	important
+adeis	ideas
+a	a
+fimnoru	uniform
+aadt	data
+abes	base
+cgilo	logic
+aabeilrsv	variables
+adn	and
+aacimottu	automatic
+aabccgikknrt	backtracking
+p	p
+	
+gloopr	prolog
+is	is
+aiilmrs	similar
+ot	to
+ilps	lisp
+no	on
+eht	the
+aimn	main
+inopst	points
+p	p
+	
+bcejot	object
+aeiinnoortt	orientation
+	
+bcejost	objects
+	
+acelsss	classes
+	
+aceehiinnrt	inheritance
+	
+eeprt	peter
+eegnrw	wegner
+p	p
+	
+adeinst	instead
+fo	of
+bghiiinoprt	prohibiting
+abgllo	global
+aestt	state
+as	as
+acfilnnotu	functional
+aggimmnoprr	programming
+deos	does
+bcdeeeijnoortt	objectoriented
+aggimmnoprr	programming
+abekrs	breaks
+pu	up
+eht	the
+lnruuy	unruly
+amss	mass
+fo	of
+abgllo	global
+aestt	state
+adn	and
+aaceelnpsstu	encapsulates
+it	it
+inot	into
+allms	small
+aaabeeglmn	manageable
+ceeips	pieces
+or	or
+bcejost	objects
+p	p
+	
+ddeeginnp	depending
+no	on
+oruy	your
+defiiinnot	definition
+clos	clos
+is	is
+or	or
+is	is
+not	not
+bcdeeeijnoortt	objectoriented
+it	it
+denost	doesnt
+opprstu	support
+aaceilnnopstu	encapsulation
+p	p
+	
+gloopr	prolog
+amy	may
+not	not
+deioprv	provide
+aceltxy	exactly
+eht	the
+cgilo	logic
+ouy	you
+antw	want
+p	p
+	
+nor	nor
+eht	the
+cceeffiiny	efficiency
+ouy	you
+antw	want
+p	p
+	
+ehort	other
+aeeeinnoprrstt	representation
+ceehmss	schemes
+aer	are
+beilopss	possible
+abdeelrsu	rulebased
+aailnnorstt	translation
+is	is
+a	a
+eflopruw	powerful
+adei	idea
+eehorvw	however
+eeimmosst	sometimes
+ouy	you
+deen	need
+emor	more
+cceeffiiny	efficiency
+adn	and
+deen	need
+ot	to
+egiv	give
+pu	up
+eht	the
+ciiilmpsty	simplicity
+fo	of
+a	a
+abdeelrsu	rulebased
+emssty	system
+p	p
+	
+aagilnnrstt	translating
+inpstu	inputs
+ot	to
+a	a
+aaccilnno	canonical
+fmor	form
+is	is
+efnot	often
+a	a
+dgoo	good
+aegrstty	strategy
+p	p
+	
+an	an
+eeprtx	expert
+emssty	system
+egos	goes
+bdenoy	beyond
+a	a
+eilmps	simple
+cgilo	logic
+aggimmnoprr	programming
+emssty	system
+it	it
+deioprsv	provides
+aeginnors	reasoning
+hitw	with
+aceinnrttuy	uncertainty
+aaeilnnopstx	explanations
+adn	and
+beefillx	flexible
+flow	flow
+fo	of
+clnoort	control
+p	p
+	
+aceinrtty	certainty
+acforst	factors
+deioprv	provide
+a	a
+eilmps	simple
+awy	way
+fo	of
+adegiln	dealing
+hitw	with
+aceinnrttuy	uncertainty
+btu	but
+eehrt	there
+is	is
+aeeglnr	general
+aeeegmnrt	agreement
+ahtt	that
+abbeiiiloprst	probabilities
+deioprv	provide
+a	a
+emor	more
+dilos	solid
+adfinnootu	foundation
+p	p
+	
+eht	the
+aegrstty	strategy
+ouy	you
+esu	use
+ot	to
+acehrs	search
+for	for
+a	a
+ceeenqsu	sequence
+fo	of
+dgoo	good
+emosv	moves
+acn	can
+be	be
+aimnoprtt	important
+p	p
+	
+ouy	you
+acn	can
+acemopr	compare
+otw	two
+deeffinrt	different
+aeegirsstt	strategies
+for	for
+a	a
+akst	task
+by	by
+ginnnru	running
+adeeeprt	repeated
+ailrst	trials
+fo	of
+eht	the
+otw	two
+p	p
+	
+it	it
+apsy	pays
+ot	to
+cceelpry	precycle
+p	p
+	
+aeiimmnootz	memoization
+acn	can
+nrtu	turn
+an	an
+ceeffiiinnt	inefficient
+agmoprr	program
+inot	into
+an	an
+ceeffiint	efficient
+eno	one
+p	p
+	
+it	it
+is	is
+efnot	often
+aeeirs	easier
+ot	to
+adel	deal
+hitw	with
+ceeeefnprrs	preferences
+agmno	among
+cegimnopt	competing
+aeeiinnoprrsttt	interpretations
+fo	of
+inpstu	inputs
+aehrrt	rather
+ahnt	than
+ginrty	trying
+ot	to
+cilrstty	strictly
+elru	rule
+eno	one
+aeeiinnoprrttt	interpretation
+in	in
+or	or
+otu	out
+p	p
+	
+cgilo	logic
+agmoprrs	programs
+aehv	have
+a	a
+eilmps	simple
+awy	way
+ot	to
+eeprssx	express
+aagmmrrs	grammars
+p	p
+	
+adghilnn	handling
+aefiinqrstu	quantifiers
+in	in
+aalnrtu	natural
+aaeggilnu	languiage
+acn	can
+be	be
+cikrty	tricky
+p	p
+	
+adghilnn	handling
+acdegilnnost	longdistance
+cddeeeeinnps	dependencies
+in	in
+aalnrtu	natural
+aaegglnu	language
+acn	can
+be	be
+cikrty	tricky
+p	p
+	
+addeginnnrstu	understanding
+how	how
+a	a
+ceehms	scheme
+eeeinprrrtt	interpreter
+korsw	works
+acn	can
+egiv	give
+ouy	you
+a	a
+beertt	better
+aaceiinopprt	appreciation
+fo	of
+how	how
+ilps	lisp
+korsw	works
+adn	and
+hstu	thus
+aekm	make
+ouy	you
+a	a
+beertt	better
+aegmmoprrr	programmer
+p	p
+	
+eht	the
+lrtuy	truly
+aagimnz	amazing
+deflnoruw	wonderful
+ghint	thing
+abotu	about
+acccll	callcc
+is	is
+eht	the
+abiilty	ability
+ot	to
+enrrtu	return
+ot	to
+a	a
+aciinnnoottu	continuation
+inopt	point
+emor	more
+ahnt	than
+ceno	once
+p	p
+	
+eht	the
+first	first
+ilps	lisp
+eeeinprrrtt	interpreter
+asw	was
+a	a
+elrstu	result
+fo	of
+a	a
+aegmmoprrr	programmer
+ggiinnor	ignoring
+his	his
+bosss	bosss
+acdeiv	advice
+p	p
+	
+abelnos	abelson
+adn	and
+amnsssu	sussman
+	
+is	is
+abblopry	probably
+eht	the
+best	best
+cdiinnoorttu	introduction
+ot	to
+cemoprtu	computer
+cceeins	science
+eerv	ever
+einrttw	written
+p	p
+	
+eht	the
+eilmpsst	simplest
+ceilmopr	compiler
+deen	need
+not	not
+be	be
+chmu	much
+emor	more
+celmopx	complex
+ahnt	than
+an	an
+eeeinprrrtt	interpreter
+p	p
+	
+an	an
+aadeinorrrtxy	extraordinary
+aeefrtu	feature
+fo	of
+ains	ansi
+cmmnoo	common
+ilps	lisp
+is	is
+eht	the
+acfiilty	facility
+for	for
+adghilnn	handling
+eorrrs	errors
+p	p
+	
+fi	if
+ouy	you
+acn	can
+addennrstu	understand
+how	how
+ot	to
+eirtw	write
+adn	and
+ehnw	when
+ot	to
+esu	use
+celnnooy	onceonly
+ehnt	then
+ouy	you
+lrtuy	truly
+addennrstu	understand
+acmors	macros
+p	p
+	
+a	a
+dorw	word
+ot	to
+eht	the
+eisw	wise
+dnot	dont
+egt	get
+acdeirr	carried
+aawy	away
+hitw	with
+acmors	macros
+p	p
+	
+ahtw	what
+ddi	did
+aipp	paip
+acchilmops	accomplish
+as	as
+an	an
+aacddenv	advanced
+ilps	lisp
+ettx	text
+aipp	paip
+adnsst	stands
+pu	up
+ervy	very
+ellw	well
+eehrt	there
+aer	are
+illst	still
+ervy	very
+efw	few
+ehort	other
+acelps	places
+ot	to
+egt	get
+a	a
+ghhoortu	thorough
+aeemnrttt	treatment
+fo	of
+cceeffiiny	efficiency
+eisssu	issues
+ilps	lisp
+degins	design
+eisssu	issues
+adn	and
+essu	uses
+fo	of
+acmors	macros
+adn	and
+ceilmoprs	compilers
+for	for
+acmors	macros
+alpu	paul
+aaghmrs	grahams
+bkoos	books
+aehv	have
+deno	done
+an	an
+aceeillpsy	especially
+ceeellntx	excellent
+bjo	job
+as	as
+an	an
+ai	ai
+aggimmnoprr	programming
+ettx	text
+aipp	paip
+deos	does
+ellw	well
+eht	the
+lnoy	only
+aelr	real
+cegimnopt	competing
+ettx	text
+ot	to
+eeegmr	emerge
+ceelnrty	recently
+is	is
+bforsu	forbus
+adn	and
+de	de
+eeklr	kleer
+adn	and
+ehty	they
+aehv	have
+a	a
+emor	more
+deiilmt	limited
+adn	and
+hstu	thus
+emor	more
+cdefosu	focused
+adn	and
+adeeginrtt	integrated
+aachoppr	approach
+acceginnnortt	concentrating
+no	on
+ceeefinnr	inference
+emsssty	systems
+eht	the
+aachiknr	charniak
+bceeikrs	riesbeck
+adn	and
+cdemmortt	mcdermott
+bkoo	book
+is	is
+alos	also
+illst	still
+hortw	worth
+giklnoo	looking
+at	at
+eno	one
+aceghn	change
+eorv	over
+eht	the
+alst	last
+isx	six
+aersy	years
+is	is
+ahtt	that
+ai	ai
+aggimmnoprr	programming
+ahs	has
+begnu	begun
+ot	to
+kloo	look
+emor	more
+eikl	like
+aeglrru	regular
+aggimmnoprr	programming
+abceesu	because
+a	a
+ai	ai
+agmoprrs	programs
+eikl	like
+aeglrru	regular
+agmoprrs	programs
+aer	are
+acegiilnnrsy	increasingly
+ccdeennor	concerned
+hitw	with
+aeglr	large
+aadt	data
+abess	bases
+adn	and
+b	b
+aeglrru	regular
+aegmmoprrrs	programmers
+aehv	have
+begnu	begun
+ot	to
+adderss	address
+ghinst	things
+chsu	such
+as	as
+aceghinrs	searching
+eht	the
+eeinnrtt	internet
+adn	and
+ceggiinnorz	recognizing
+adghiinnrtw	handwriting
+adn	and
+ceehps	speech
+an	an
+ai	ai
+aggimmnoprr	programming
+ettx	text
+adoty	today
+dlouw	would
+aehv	have
+ot	to
+ceorv	cover
+aadt	data
+abes	base
+aceefinrst	interfaces
+hptt	http
+adn	and
+ehort	other
+eknortw	network
+cloooprst	protocols
+adeghinrt	threading
+aacghilpr	graphical
+aceefinrst	interfaces
+adn	and
+ehort	other
+eisssu	issues
+as	as
+an	an
+ai	ai
+ettx	text
+aipp	paip
+deos	does
+not	not
+aefr	fare
+as	as
+ellw	well
+it	it
+eenrv	never
+adeempttt	attempted
+ot	to
+be	be
+a	a
+ceeehimnoprsv	comprehensive
+ai	ai
+ettx	text
+eginrssst	stressing
+eht	the
+aadgimprs	paradigms
+or	or
+accilsss	classics
+fo	of
+eht	the
+defil	field
+aehrrt	rather
+ahnt	than
+eht	the
+most	most
+cenrrtu	current
+agmoprrs	programs
+adn	and
+eehiorst	theories
+ahilppy	happily
+eht	the
+accilsss	classics
+aer	are
+beggiinnn	beginning
+ot	to
+kloo	look
+beeloost	obsolete
+now	now
+eht	the
+defil	field
+dlouw	would
+be	be
+in	in
+orrsy	sorry
+aehps	shape
+fi	if
+ahtt	that
+ddint	didnt
+aehnpp	happen
+aeellntuvy	eventually
+for	for
+a	a
+emor	more
+demnor	modern
+aachoppr	approach
+ot	to
+ai	ai
+efgort	forget
+aipp	paip
+adn	and
+kloo	look
+at	at
+aacfiiilrt	artificial
+ceeegiillnnt	intelligence
+a	a
+demnor	modern
+aachoppr	approach
+eeprt	peter
+ginorv	norvig
