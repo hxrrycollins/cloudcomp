@@ -19,4 +19,4 @@ for line in sys.stdin:
                 anagrams[holder].append(word)
 
 for item in anagrams:
-    print('%s\t%s' % (item, ', '.join(anagrams[item])))
+    print('%s\t(%s)' % (item, ', '.join(anagrams[item])))
