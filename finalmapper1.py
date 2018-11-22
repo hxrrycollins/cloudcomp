@@ -1,13 +1,11 @@
+#!/usr/bin/env python
 """finalmapper.py"""
 import re
 import sys
 
 anagrams = {}
-document = open("norvig.txt", "r")
-
-for line in document:
+for line in sys.stdin:
     line = line.lower().strip()
-    words = re.split(',|\.', line)
     words = line.split()
 
 
