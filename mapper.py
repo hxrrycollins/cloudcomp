@@ -3,12 +3,11 @@
 import re
 import sys
 
-document = open("holybible.txt","r")
+
 anagrams = {}
 
-f = open("empty.txt", 'w')
 
-for line in document:
+for line in sys.stdin:
     line = line.lower().strip()
     words = line.split()
 

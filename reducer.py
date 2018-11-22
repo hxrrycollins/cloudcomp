@@ -5,9 +5,8 @@ from operator import itemgetter
 
 reduced_anas = {}
 unique_anagrams = []
-f = open('test.txt', 'r')
 
-for line in f:
+for line in sys.stdin:
     wordList = re.sub("[^\w]", " ",  line.strip()).split()
     print (wordList)
     key = wordList[0]
