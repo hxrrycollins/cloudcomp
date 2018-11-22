@@ -4,7 +4,6 @@ import re
 import sys
 anagrams = {}
 for line in sys.stdin:
-    line = re.sub("[,.]", " ", line)
     line = line.lower().strip()
     words = line.split()
     for word in words:
