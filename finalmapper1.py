@@ -1,3 +1,4 @@
+#!/usr/bin/env python 
 """finalmapper.py"""
 import re
 import sys
